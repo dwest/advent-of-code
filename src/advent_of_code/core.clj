@@ -17,40 +17,98 @@
     (loop [curr 50 ; start at 50 per directions
            [_, direction, clicks] (-> (re-seq #"([LR])([0-9]*)" (.readLine input))
                                       first)
-           zero-count 0]
-      (pprint/pprint {:curr curr
-                      :direction direction
-                      :clicks (Integer/parseInt clicks)
-                      :zero-count zero-count
-                      })
-      ;; (when-not (= steps 3)
-      ;;   (recur
-      ;;    curr
-      ;;    (-> (re-seq #"([LR])([0-9]*)" (.readLine input))
-      ;;        first)
-      ;;    (inc steps)))
-
+           zero-count 0
+           part-two 0]
+      ;; (pprint/pprint {:curr curr
+      ;;                 :direction direction
+      ;;                 :clicks (Integer/parseInt clicks)
+      ;;                 :zero-count zero-count
+      ;;                 :part-two part-two})
       (let [c (Integer/parseInt clicks)
-            new
-            (->
-             (condp = direction
+            delta
+            (condp = direction
               "L" (* -1 c)
               "R" c)
-             (+ curr)
-             (mod 100))
+            new
+            (-> delta
+                (+ curr)
+                (mod 100))
+
+            zero?
+            (if (= new 0)
+              1
+              0)
+
+            new-zero?
+            (if (and (not= curr 0)
+                     (= new 0))
+              1
+              0)
+
+            crossed?
+            (cond
+              ;; was zero and < 100 clicks
+              (and (= curr 0)
+                   (< c 100))
+              0
+
+              ;; no remainder
+              (and (= new 0)
+                   (> delta 100))
+              (abs (quot (+ delta curr)
+                            100))
+
+              (and (= new 0)
+                   (< delta -100)
+                   (= (mod (abs delta) 100)
+                      curr))
+              (+ new-zero?
+                 (abs (quot (+ delta curr)
+                            100)))
+
+              ;; went out of bounds?
+              (or (< (+ delta curr) 0)
+                  (> (+ delta curr) 100))
+              (max 1
+                   (abs (quot (+ delta curr)
+                              100)))
+
+              :else new-zero?)
             ln (.readLine input)]
         (if-not (nil? ln)
-          (recur
-           new
-           (-> (re-seq #"([LR])([0-9]*)" ln)
-               first)
-           (if (= new 0)
-             (inc zero-count)
-             zero-count))
-          (prn (format "The password is: %d" zero-count)))))))
+          (do
+            ;; (prn
+            ;;  {:curr curr
+            ;;   :new new
+            ;;   :direction direction
+            ;;   :clicks c
+            ;;   :zero? zero?
+            ;;   :zero-count (+ zero-count zero?)
+            ;;   :crossed? crossed?
+            ;;   :part-two (+ part-two crossed?)})
+            (prn
+             (format "%02d %s %3d = %02d; zero? %d zs %04d xs %02d pt %04d"
+                     curr (if (= direction "L") "-" "+") c new
+                     zero? (+ zero-count zero?)
+                     crossed? (+ part-two crossed?)))
+            ;; {:curr curr
+            ;;   :new new
+            ;;   :direction direction
+            ;;   :clicks c
+            ;;   :zero? zero?
+            ;;   :zero-count (+ zero-count zero?)
+            ;;   :crossed? crossed?
+            ;;   :part-two (+ part-two crossed?)})
+            (recur
+             new
+             (-> (re-seq #"([LR])([0-9]*)" ln)
+                 first)
+             (+ zero-count zero?)
+             (+ part-two crossed?)))
+          (prn (format "The password is: %d; part-two: %d" zero-count (+ part-two crossed?))))))))
 
 (defn -main
-  "I don't do a whole lot."
+  "Dispatch based on CLI flags"
   [mode day & args]
   ;; (pprint/pprint {:mode mode
   ;;                 :day day
