@@ -1,10 +1,14 @@
 # advent-of-code
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure repo for Advent of Code 2025
 
 ## Usage
 
-FIXME
+# with readline support: [mode, day] args
+clj -M:run dev 01
+
+# without readline: [mode, day] args
+clojure -M:run dev 01
 
 ## License
 
